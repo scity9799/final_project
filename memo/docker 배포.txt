@@ -1,0 +1,115 @@
+팀프로젝트
+├ 프로젝트.war
+└ mysql.sql
+   ├ DDL
+   └ Dummy Data
+
+docker-project/
+├ Dockerfile
+├ teamproject.war
+├ docker-compose.yml
+└ initdb/
+   └ mysql.sql
+
+0. 설치 확인 및 권한 설정, 폴더 생성
+   ubuntu / team1234! 접속
+
+1) sudo apt install docker.io docker-compose-v2 -y
+
+2) docker --version
+
+3) 권한설정 매번 sudo 안쓰도록
+      sudo usermod -aG docker $USER
+   적용 
+      newgrp docker
+
+4) 프로젝트 폴더 생성
+   mkdir ~/docker-project
+   cd ~/docker-project
+
+5) initdb 폴더 생성
+   mkdir initdb
+   
+6) Dockerfile 생성
+   nano Dockerfile
+
+FROM tomcat:9.0-jdk17
+
+RUN rm -rf /usr/local/tomcat/webapps/*
+
+COPY teamproject.war /usr/local/tomcat/webapps/ROOT.war
+
+EXPOSE 8080
+
+CMD ["catalina.sh", "run"]
+
+
+7) docker-compose.yml
+   team01, team02, team03, team04 각자 맞는 팀번호로 입력
+
+services:
+
+   team04-mysql:
+     image: mysql:8.0
+     container_name: team04-mysql
+     restart: always
+
+   command:
+       --character-set-server=utf8mb4
+       --collation-server=utf8mb4_general_ci
+
+   environment:
+       MYSQL_ROOT_PASSWORD: 1234
+       MYSQL_DATABASE: team04db
+
+   ports:
+      - "3310:3306"
+
+    volumes:
+      - team04-mysql-data:/var/lib/mysql
+      - ./initdb:/docker-entrypoint-initdb.d
+
+    networks:
+      - team04-network
+
+  team04-tomcat:
+    build: .
+    container_name: team04-tomcat
+
+    ports:
+      - "8084:8080"
+
+    depends_on:
+      - team04-mysql
+
+    networks:
+      - team04-network
+
+volumes:
+  team04-mysql-data:
+
+networks:
+  team04-network:   
+
++) 포트 팀별로 다르게 설정
+팀      Tomcat   MySQL
+team01  8081     3307
+team02  8082     3308
+team03  8083     3309
+team04  8084     3310
+
+ war 뽑기 전 반드시 수정
+jdbc:mysql://team04-mysql:3306/team04db?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+
+기존 컨테이너 정리
+   docker stop team04-tomcat team04-mysql
+   docker rm team04-tomcat team04-mysql
+
+volume 초기화
+   docker volume rm team04-mysql-data
+
+실행
+   docker compose up -d
+
+종료
+   docker compose down -v
