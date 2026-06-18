@@ -29,8 +29,8 @@ if (!$product) {
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-muted">카테고리</label>
                             <select name="product_category" class="form-select border-muted" style="border-radius: 8px;">
-                                <option value="feed" <?=$product['product_category'] == 'feed' ? 'selected' : ''?>>사료 (feed)</option>
-                                <option value="pad" <?=$product['product_category'] == 'pad' ? 'selected' : ''?>>배변패드 (pad)</option>
+                                <option value="feed" <?=$product['product_category'] == 'feed' ? 'selected' : ''?>>사료/간식</option>
+                                <option value="item" <?=$product['product_category'] == 'item' ? 'selected' : ''?>>애견 용품</option>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -41,6 +41,11 @@ if (!$product) {
                             <label class="form-label small fw-bold text-muted">상품 이름</label>
                             <input type="text" name="product_name" class="form-control border-muted" value="<?=htmlspecialchars($product['product_name'])?>" style="border-radius: 8px;" required>
                         </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted">상품 요약 설명</label>
+                            <input type="text" name="product_description" class="form-control border-muted" value="<?=htmlspecialchars($product['product_description'])?>" style="border-radius: 8px;" required>
+                        </div>
+
                         <div class="col-12">
                             				<label class="form-label small fw-bold text-muted">현재 이미지</label>
 				<div class="mb-3 d-flex align-items-center gap-3">

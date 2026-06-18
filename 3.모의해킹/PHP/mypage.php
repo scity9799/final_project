@@ -2,7 +2,7 @@
 include 'db.php';
 include 'header.php';
 
-// [실습용 설정] 로그인 상태 체크 (실제 환경에서는 세션 검증이 엄격해야 합니다)
+// [실습용 설정] 로그인 상태 체크 (세션이 비어있으면 로그인 페이지로 튕김)
 if (!isset($_SESSION['user_id'])) {
     echo "<script>alert('로그인이 필요한 서비스입니다, 왈!'); location.href='login.php';</script>";
     exit;
@@ -10,19 +10,36 @@ if (!isset($_SESSION['user_id'])) {
 
 $session_id = $_SESSION['user_id'];
 
-// 사용자의 상세 정보 및 모의 주문 내역 가져오기
-$user_sql = "SELECT * FROM ddm_user WHERE user_id = '$session_id'";
+// 1. 사용자의 상세 정보 가져오기 (문자열 이스케이프 처리로 안정성 보장)
+$safe_session_id = mysqli_real_escape_string($conn, $session_id);
+$user_sql = "SELECT * FROM ddm_user WHERE user_id = '$safe_session_id'";
 $user_result = mysqli_query($conn, $user_sql);
-$user_info = mysqli_fetch_assoc($user_result);
 
-// 주문 내역 쿼리 (가장 최근 주문 3개만 바인딩)
-$order_sql = "SELECT * FROM ddm_order WHERE user_id = '$session_id' ORDER BY order_id DESC LIMIT 3";
+// 초기값 선언 (데이터가 없어서 500 에러 나는 현상 원천 차단)
+$user_info = [
+    'user_name' => '댕댕이',
+    'user_id' => $session_id,
+    'user_email' => '',
+    'user_address' => '',
+    'created_at' => '2026-06-18'
+];
+
+if ($user_result && mysqli_num_rows($user_result) > 0) {
+    $db_user = mysqli_fetch_assoc($user_result);
+    if ($db_user) {
+        $user_info = array_merge($user_info, $db_user);
+    }
+}
+
+// 2. 주문 내역 쿼리
+// 만약 ddm_order 테이블이 유저 일련번호(예: user_number) 기준이라면 아래 주석을 참고해줘!
+// 현재는 user_id(문자열) 기준으로 매핑되도록 처리하여 오류를 방지함
+$order_sql = "SELECT * FROM ddm_order WHERE user_id = '$safe_session_id' ORDER BY order_id DESC LIMIT 3";
 $order_result = mysqli_query($conn, $order_sql);
 ?>
 
 <div class="container my-5" style="min-height: 75vh;">
     <div class="row g-4">
-        <!-- 1. 왼쪽 사이드바: 프로필 요약 카드 -->
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm text-center p-4 h-100" style="border-radius: 16px;">
                 <div class="mx-auto my-3 d-flex align-items-center justify-content-center text-white" 
@@ -30,7 +47,7 @@ $order_result = mysqli_query($conn, $order_sql);
                     🐶
                 </div>
                 <h4 class="fw-bold text-dark mb-1"><?=htmlspecialchars($user_info['user_name'])?> 님</h4>
-                <p class="text-muted small mb-4">@<?=$user_info['user_id']?></p>
+                <p class="text-muted small mb-4">@<?=htmlspecialchars($user_info['user_id'])?></p>
                 
                 <div class="p-3 mb-4 text-start" style="background-color: #f8f6ff; border-radius: 12px;">
                     <div class="d-flex justify-content-between small mb-2">
@@ -39,7 +56,7 @@ $order_result = mysqli_query($conn, $order_sql);
                     </div>
                     <div class="d-flex justify-content-between small">
                         <span class="text-muted">가입일</span>
-                        <span class="text-dark"><?=$user_info['created_at'] ?? '2026-06-18'?></span>
+                        <span class="text-dark"><?=htmlspecialchars($user_info['created_at'])?></span>
                     </div>
                 </div>
 
@@ -51,11 +68,9 @@ $order_result = mysqli_query($conn, $order_sql);
             </div>
         </div>
 
-        <!-- 2. 오른쪽 메인 영역: 정보 수정 및 최근 주문 내역 -->
         <div class="col-lg-8">
             <div class="d-flex flex-column gap-4">
                 
-                <!-- [섹션 A] 회원 정보 관리 (Stored XSS 진단 포인트) -->
                 <div class="card border-0 shadow-sm p-4" style="border-radius: 16px;">
                     <h5 class="fw-bold text-dark mb-3 border-start border-4 border-indigo ps-2" style="border-color: #6f42c1 !important;">
                         ⚙️ 배송지 및 정보 변경
@@ -65,15 +80,14 @@ $order_result = mysqli_query($conn, $order_sql);
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-muted">아이디 (변경 불가)</label>
-                                <input type="text" class="form-control bg-light" value="<?=$user_info['user_id']?>" readonly style="border-radius: 8px;">
+                                <input type="text" class="form-control bg-light" value="<?=htmlspecialchars($user_info['user_id'])?>" readonly style="border-radius: 8px;">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-muted">이메일 주소</label>
-                                <input type="email" name="user_email" class="form-control border-muted" value="<?=$user_info['user_email']?>" style="border-radius: 8px;">
+                                <input type="email" name="user_email" class="form-control border-muted" value="<?=htmlspecialchars($user_info['user_email'])?>" style="border-radius: 8px;">
                             </div>
                             <div class="col-12">
                                 <label class="form-label small fw-bold text-muted">기본 배송지 주소</label>
-                                <!-- [보안 취약점 포인트]: htmlspecialchars 처리를 생략하여 배송지에 스크립트를 저장 후 마이페이지 열람 시 탈취 공격(Stored XSS) 시연 유도 -->
                                 <input type="text" name="user_address" class="form-control border-muted" value="<?=$user_info['user_address']?>" style="border-radius: 8px;">
                             </div>
                             <div class="col-12 text-end mt-4">
@@ -85,7 +99,6 @@ $order_result = mysqli_query($conn, $order_sql);
                     </form>
                 </div>
 
-                <!-- [섹션 B] 최근 주문 내역 (그리드/테이블 스타일 조합) -->
                 <div class="card border-0 shadow-sm p-4" style="border-radius: 16px;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="fw-bold text-dark m-0 border-start border-4 border-indigo ps-2" style="border-color: #6f42c1 !important;">
@@ -106,8 +119,9 @@ $order_result = mysqli_query($conn, $order_sql);
                             </thead>
                             <tbody>
                                 <?php
-                                if (mysqli_num_rows($order_result) > 0) {
+                                if ($order_result && mysqli_num_rows($order_result) > 0) {
                                     while ($order = mysqli_fetch_assoc($order_result)) {
+                                        $status = isset($order['order_status']) ? $order['order_status'] : '배송중';
                                 ?>
                                         <tr style="border-bottom: 1px solid #f1effb;">
                                             <td class="fw-bold text-muted py-3">#<?=$order['order_id']?></td>
@@ -117,7 +131,7 @@ $order_result = mysqli_query($conn, $order_sql);
                                             <td class="py-3 text-danger fw-bold"><?=number_format($order['order_price'])?>원</td>
                                             <td class="py-3">
                                                 <span class="badge" style="background-color: #eefdf4; color: #198754; padding: 6px 12px; border-radius: 20px;">
-                                                    <?=$order['order_status'] ?? '배송중'?>
+                                                    <?=htmlspecialchars($status)?>
                                                 </span>
                                             </td>
                                         </tr>

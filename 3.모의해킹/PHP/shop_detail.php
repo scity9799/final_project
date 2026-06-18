@@ -9,7 +9,8 @@ if (empty($product_id)) {
     exit;
 }
 
-$query = "SELECT * FROM ddm_product WHERE product_id = '$product_id'";
+$safe_product_id = mysqli_real_escape_string($conn, $product_id);
+$query = "SELECT * FROM ddm_product WHERE product_id = '$safe_product_id'";
 $result = mysqli_query($conn, $query);
 
 if ($result && mysqli_num_rows($result) > 0) {
@@ -31,7 +32,7 @@ if ($result && mysqli_num_rows($result) > 0) {
             <div class="card border-0 shadow-sm p-3" style="border-radius: 15px;">
                 <img src="<?php echo htmlspecialchars($product['product_image'] ?? ''); ?>" 
                      onerror="this.src='https://via.placeholder.com/500x500/f3f0ff/6f42c1?text=DingDongDog'" 
-                     class="img-fluid" style="border-radius: 12px; max-height: 500px; object-fit: cover;" alt="상품 이미지">
+                     class="img-fluid" style="border-radius: 12px; max-height: 500px; object-fit: cover;" alt="이미지 준비중">
             </div>
         </div>
 
@@ -54,14 +55,17 @@ if ($result && mysqli_num_rows($result) > 0) {
                     <p class="text-muted lh-lg"><?php echo nl2br(htmlspecialchars($product['product_description'] ?? '')); ?></p>
                 </div>
 
-                <form action="cart_add.php" method="POST">
+                <form method="POST" id="product_form">
                     <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($product_id); ?>">
+                    <input type="hidden" name="product_name" value="<?php echo htmlspecialchars($product['product_name'] ?? ''); ?>">
                     <input type="hidden" name="product_price" value="<?php echo $price; ?>">
+                    
+                    <input type="hidden" name="total_amount" id="hidden_total_amount" value="<?php echo $price; ?>">
 
                     <div class="row align-items-center mb-3">
                         <div class="col-4"><label class="form-label text-secondary small fw-bold m-0">수량 선택</label></div>
                         <div class="col-8">
-                            <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1" max="99" style="max-width: 100px; border-radius: 8px;">
+                            <input type="number" class="form-control" id="quantity" name="product_count" value="1" min="1" max="99" style="max-width: 100px; border-radius: 8px;">
                         </div>
                     </div>
 
@@ -85,7 +89,7 @@ if ($result && mysqli_num_rows($result) > 0) {
                                 <button type="submit" formaction="cart_add.php" class="btn btn-outline-dark w-100 p-3 fw-bold" style="border-radius: 10px; border-color: #6f42c1; color: #6f42c1;">🛒 장바구니 담기</button>
                             </div>
                             <div class="col-sm-6">
-                                <button type="submit" formaction="order_process.php" class="btn text-white w-100 p-3 fw-bold" style="background-color: #6f42c1; border-radius: 10px;">⚡ 즉시 결제하기</button>
+                                <button type="submit" formaction="order_direct_proc.php" class="btn text-white w-100 p-3 fw-bold" style="background-color: #6f42c1; border-radius: 10px;">⚡ 즉시 결제하기</button>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -99,12 +103,18 @@ if ($result && mysqli_num_rows($result) > 0) {
 const pricePerItem = <?php echo $price; ?>;
 const qtyInput = document.getElementById('quantity');
 const totalDisplay = document.getElementById('total_price_display');
+const hiddenTotalAmount = document.getElementById('hidden_total_amount');
 
 qtyInput.addEventListener('input', function() {
     let qty = parseInt(this.value);
     if(isNaN(qty) || qty < 1) qty = 1;
+    
     const totalPrice = pricePerItem * qty;
+    
     totalDisplay.innerText = totalPrice.toLocaleString() + '원';
+    
+    // 주입되는 hidden 파라미터도 변수 구조에 맞게 실시간 업데이트!
+    hiddenTotalAmount.value = totalPrice;
 });
 </script>
 
