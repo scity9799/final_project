@@ -1,6 +1,6 @@
 <?php
 // db.php : MariaDB 연결 및 데이터베이스 글로벌 인스턴스 정의
-$host = "localhost";
+$host = "10.200.40.2";
 $user = "team04db";
 $pass = "team04!";
 $dbname = "ddm_db";

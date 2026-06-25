@@ -1,10 +1,21 @@
+-- 1. 오타가 교정된 정확한 데이터베이스 생성
 CREATE DATABASE IF NOT EXISTS ddm_db DEFAULT CHARACTER SET utf8mb4;
 
-CREATE USER IF NOT EXISTS 'team04db'@'localhost' IDENTIFIED BY 'team04!';
-GRANT ALL PRIVILEGES ON ddm_db.* TO 'team04db'@'localhost';
+-- 2. 기존 접속 범위가 잘못 설정된 원격 유저 삭제 (클리어화)
+DROP USER IF EXISTS 'team04db'@'10.200.40.18';
+
+-- 3. ★ 중요: 웹 서버의 통신 접근을 무조건 수용하도록 와일드카드(%) 유저 생성
+CREATE USER IF NOT EXISTS 'team04db'@'%' IDENTIFIED BY 'team04!';
+
+-- 4. 생성된 원격 계정에 ddm_db 쇼핑몰 데이터베이스 마스터 권한 부여
+GRANT ALL PRIVILEGES ON ddm_db.* TO 'team04db'@'%';
+
+-- 5. 변경된 유저 권한 테이블을 메모리에 즉시 반영
 FLUSH PRIVILEGES;
 
+-- 6. 데이터베이스 전환 및 더미 데이터 주입 대기 상태 진입
 USE ddm_db;
+
 
 -- 1. 안전하게 테이블 삭제 (외래키 무시)
 SET FOREIGN_KEY_CHECKS = 0;
@@ -86,9 +97,6 @@ CREATE TABLE ddm_order (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (order_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 1. 기존 데이터 초기화 (주의: 데이터가 모두 삭제됨!)
-TRUNCATE TABLE ddm_product;
 
 -- 2. 상품 데이터 주입 (카테고리: 'feed', 'item'으로 통일)
 INSERT INTO ddm_product (product_id, product_category, product_name, product_price, product_image, product_description, product_reg_date) VALUES
