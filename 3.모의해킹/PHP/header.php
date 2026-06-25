@@ -49,10 +49,9 @@ if (session_status() == PHP_SESSION_NONE) {
 
             <div class="d-flex align-items-center gap-3">
     <?php if (isset($_SESSION['user_id'])): ?>
-        <span class="text-white small">
-            <strong><?= htmlspecialchars($_SESSION['user_id']) ?></strong>님 환영합니다 🐾
-        </span>
-
+       	<span class="text-white small">
+        	<strong><?= htmlspecialchars($_SESSION['user_nickname'] ?? $_SESSION['user_id']) ?></strong>님 환영합니다 🐾
+    	</span>
         <?php if ($_SESSION['user_type'] === 'a'): ?>
             <a href="product_add.php" class="btn btn-sm btn-warning fw-bold px-3">상품등록</a>
             <a href="logout.php" class="btn btn-sm btn-danger px-2">로그아웃</a>

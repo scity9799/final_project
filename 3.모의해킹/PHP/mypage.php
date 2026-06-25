@@ -11,16 +11,17 @@ if (!isset($_SESSION['user_id'])) {
 $session_id = $_SESSION['user_id'];
 $safe_session_id = mysqli_real_escape_string($conn, $session_id);
 
-// 1. 사용자 정보 가져오기
-$user_sql = "SELECT * FROM ddm_user WHERE user_id = '$safe_session_id'";
+// 1. 사용자 정보 가져오기 (닉네임, 이메일 포함)
+$user_sql = "SELECT * FROM ddd_user WHERE user_id = '$safe_session_id'";
 $user_result = mysqli_query($conn, $user_sql);
 $user_info = mysqli_fetch_assoc($user_result);
 
+// 정보가 없으면 기본값 설정
 if (!$user_info) {
-    $user_info = ['user_name' => '댕댕이', 'user_id' => $session_id, 'user_email' => '', 'user_address' => '', 'created_at' => date('Y-m-d')];
+    $user_info = ['user_nickname' => '댕댕이', 'user_id' => $session_id, 'user_email' => '', 'user_address' => '', 'created_at' => date('Y-m-d')];
 }
 
-// 2. 주문 내역 쿼리 (JOIN 사용으로 상품명 문제 해결)
+// 2. 주문 내역 쿼리 (상품명 포함)
 $order_sql = "SELECT o.*, p.product_name 
               FROM ddm_order o 
               LEFT JOIN ddm_product p ON o.product_id = p.product_id 
@@ -34,8 +35,8 @@ $order_result = mysqli_query($conn, $order_sql);
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm text-center p-4 h-100" style="border-radius: 16px;">
                 <div class="mx-auto my-3 d-flex align-items-center justify-content-center text-white" style="width: 90px; height: 90px; background-color: #6f42c1; border-radius: 50%; font-size: 2rem;">🐶</div>
-                <h4 class="fw-bold text-dark mb-1"><?=htmlspecialchars($user_info['user_name'])?> 님</h4>
-                <p class="text-muted small mb-4">@<?=htmlspecialchars($user_info['user_id'])?></p>
+                <h4 class="fw-bold text-dark mb-1"><?=htmlspecialchars($user_info['user_nickname'] ?? '댕댕이')?> 님</h4>
+		<p class="text-muted small mb-4"><?=htmlspecialchars($user_info['user_email'] ?? '이메일 없음')?></p>
                 <div class="d-grid gap-2">
                     <button class="btn text-white py-2" style="background-color: #6f42c1;" onclick="location.href='logout.php'">로그아웃</button>
                 </div>
@@ -45,15 +46,29 @@ $order_result = mysqli_query($conn, $order_sql);
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 16px;">
                 <h5 class="fw-bold mb-3 border-start border-4 border-indigo ps-2" style="border-color: #6f42c1 !important;">⚙️ 배송지 및 정보 변경</h5>
-                <form action="mypage_update.php" method="POST">
-                    <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label small fw-bold">아이디</label><input type="text" class="form-control bg-light" value="<?=htmlspecialchars($user_info['user_id'])?>" readonly></div>
-                        <div class="col-md-6"><label class="form-label small fw-bold">이메일</label><input type="email" name="user_email" class="form-control" value="<?=htmlspecialchars($user_info['user_email'])?>"></div>
-                        <div class="col-12"><label class="form-label small fw-bold">주소</label><input type="text" name="user_address" class="form-control" value="<?=htmlspecialchars($user_info['user_address'])?>"></div>
-                        <div class="col-12 text-end"><button type="submit" class="btn text-white" style="background-color: #6f42c1;">정보 수정하기 🦴</button></div>
-                    </div>
-                </form>
-            </div>
+               <form action="mypage_update.php" method="POST">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label small fw-bold">아이디</label>
+            <input type="text" class="form-control bg-light" value="<?=htmlspecialchars($user_info['user_id'])?>" readonly>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label small fw-bold">닉네임</label>
+            <input type="text" name="user_nickname" class="form-control" value="<?=htmlspecialchars($user_info['user_nickname'] ?? '')?>">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label small fw-bold">이메일 주소</label>
+            <input type="email" name="user_email" class="form-control" value="<?=htmlspecialchars($user_info['user_email'] ?? '')?>">
+        </div>
+        <div class="col-12">
+            <label class="form-label small fw-bold">기본 배송지 주소</label>
+            <input type="text" name="user_address" class="form-control" value="<?=htmlspecialchars($user_info['user_address'] ?? '')?>">
+        </div>
+        <div class="col-12 text-end mt-2">
+            <button type="submit" class="btn text-white" style="background-color: #6f42c1;">정보 수정하기 🦴</button>
+        </div>
+    </div>
+</form>            </div>
 
             <div class="card border-0 shadow-sm p-4" style="border-radius: 16px;">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -68,7 +83,6 @@ $order_result = mysqli_query($conn, $order_sql);
                         <?php
                         if ($order_result && mysqli_num_rows($order_result) > 0) {
                             while ($order = mysqli_fetch_assoc($order_result)) {
-                                // 0원 오류 방지: order_price 컬럼값을 명확히 사용
                                 $price = isset($order['order_price']) ? (int)$order['order_price'] : 0;
                         ?>
                         <tr style="cursor:pointer;">
