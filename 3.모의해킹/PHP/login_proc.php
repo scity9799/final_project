@@ -26,7 +26,7 @@ if ($login_type === 'admin') {
     
     if ($row = mysqli_fetch_assoc($result)) {
         $_SESSION['user_id'] = $row['admin_id'];
-        $_SESSION['user_type'] = 'A'; // 관리자 권한 설정
+        $_SESSION['user_type'] = 'a'; // 관리자 권한 설정
         echo "<script>alert('관리자님 환영합니다!'); location.href='main.php';</script>";
         exit;
     }
