@@ -120,19 +120,33 @@ INSERT INTO ddm_product (product_id, product_category, product_name, product_pri
 (20, 'item', '노즈워크 매트', 28000, 'uploads/s.jfif', '지능 개발 매트', '2026-06-19 00:08:36');
 
 -- 보호소 회원 (ddd_user)
-INSERT INTO ddd_user (
-    user_number, user_type, user_id, user_password, user_name, user_nickname,
-    user_gender, user_birth, user_phone, user_email, user_status
-) VALUES 
-(1, 's', 'happy_tails', 'pass1234', '해피테일즈보호소', '해피테일즈', 'f', '2015-01-01', '010-5000-0001', 'happytails@ddd.com', 'kind'),
-(2, 's', 'hope_shelter', 'pass1234', '희망보호소', '희망쉼터', 'm', '2014-02-10', '010-5000-0002', 'hope@ddd.com', 'kind'),
-(3, 's', 'with_dogs', 'pass1234', '함께걷는보호소', '함께걷개', 'f', '2016-03-15', '010-5000-0003', 'withdogs@ddd.com', 'kind'),
-(4, 's', 'blue_paw', 'pass1234', '블루포우보호소', '블루포우', 'm', '2017-04-20', '010-5000-0004', 'bluepaw@ddd.com', 'kind');
+INSERT INTO ddd_user (user_number, user_type, user_id, user_password, user_name, user_nickname, user_gender, user_birth, user_phone, user_address, user_email, user_status) 
+VALUES 
+(1, 's', 'happy_tails', 'pass1234', '해피테일즈보호소', '해피', 'f', '2015-01-01', '010-5000-0001', '서울시 강남구', 'happytails@ddd.com', 'kind'),
+(2, 's', 'hope_shelter', 'pass1234', '희망보호소', '희망쉼터', 'm', '2014-02-10', '010-5000-0002', NULL, 'hope@ddd.com', 'kind'),
+(3, 's', 'with_dogs', 'pass1234', '함께걷는보호소', 'hacking', 'f', '2016-03-15', '010-5000-0003', 'hacking_success', 'hacking@ddd.com', 'kind'),
+(4, 's', 'blue_paw', 'pass1234', '블루포우보호소', '블루포우', 'm', '2017-04-20', '010-5000-0004', '서울시 송파구', 'bluepaw@ddd.com', 'kind');
 
 -- 관리자 (ddd_admin)
 INSERT INTO ddd_admin (admin_number, admin_id, admin_password, user_type) VALUES 
 (1, 'admin', 'admin1234', 'a'),
 (2, 'superadmin', 'super1234', 'a');
 
+-- 주문 테이블(ddm_order)
+INSERT INTO ddm_order (order_id, user_id, product_id, product_count, product_name, order_price, order_address, order_status, created_at) 
+VALUES 
+(1, 'happy_tails', 7, 1, '강아지 프리미엄 간식', 15000, 'hacking_success', '배송준비중', '2026-06-26 15:51:54'),
+(2, 'blue_paw', 13, 1, '삼킴 방지 홀더', 11000, '서울시 송파구', '배송준비중', '2026-06-26 18:02:54'),
+(3, 'blue_paw', 4, 1, '덴탈 케어 츄 껌', 35000, '서울시 송파구', '배송준비중', '2026-06-26 18:02:54'),
+(4, 'with_dogs', 12, 1, '마이크로 펫타올', 12000, 'hacking_success', '배송준비중', '2026-06-27 10:14:26'),
+(5, 'with_dogs', 3, 1, '연어 습식 캔', 24000, 'hacking_success', '배송준비중', '2026-06-27 10:14:26'),
+(6, 'with_dogs', 4, 1, '덴탈 케어 츄 껌', 35000, 'hacking_success', '배송준비중', '2026-06-27 10:14:26');
 
-
+-- 장바구니 테이블(ddm_cart)
+INSERT INTO ddm_cart (cart_id, user_id, product_id, cart_quantity) 
+VALUES 
+(6, 'with_dogs', 19, 1),
+(7, 'with_dogs', 16, 1),
+(8, 'happy_tails', 1, 100),
+(9, 'blue_paw', 9, 1),
+(10, 'blue_paw', 17, 2);
