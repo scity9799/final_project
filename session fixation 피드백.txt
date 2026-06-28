@@ -1,0 +1,52 @@
+686lm48v6s1de8dir6jfshrrip
+686lm48v6s1de8dir6jfshrrip
+
+ATTACKSESSION112
+
+로그인 성공시에 서버에서 session_regenerate_id()를 호출하거나 세션 쿠키가 외부에서 임의로 고정되지 않도록 설정되면 세션고정 취약점은 안먹혀
+
+1. 로그인 전 세션 ID와 로그인 후 세션 ID가 그대로 유지되어야 함
+2. 공격자가 미리 만든 세션 ID를 피해자에게 사용하게 만들 수 있어야 함
+3. 피해자가 그 세션 ID 상태로 로그인했을 때 서버가 같은 세션을 인증 세션으로 인정해야 함
+
+이 조건이 필요해
+
+세션 고정은 로그인 전 PHPSESSID 확인하고 로그인 수행하고 로그인 후 PHPSESSID 확인해서 로그인 전,후값이 같은지 확인하면돼
+
+로그인 처리 후 에 세션 저장이 실제로 되어있는지 확인해야돼
+
+Storage → Cookies → PHPSESSID 확인
+
+이거 있어야해
+만약 메 인 이동 후 phpsessid가 사라지거나 바뀌면 세션 쿠키 전달 문제가 있는거구
+
+1. 로그인 처리 파일 상단에 session_start()가 있는지
+2. 로그인 성공 시 $_SESSION['user_id'] 같은 값이 저장되는지
+3. 메인 페이지에서 같은 세션 이름으로 확인하는지
+
+이렇게 확인하면돼
+
+include 'db.php';
+session_start();
+이렇게 되어있는데 db.php에서 echo나 에러출력이나 공백있으면 세션 쿠키가 제대로 처리 안될 수 있어서 두줄 위치를 바꿔
+세션 관련 코드를 제일 위쪽에
+
+안되면
+
+<?php
+session_start();
+
+echo '<pre>';
+var_dump($_SESSION);
+echo '</pre>';
+exit;
+?>
+
+main.php에서 세션이 유지되는지 확인할거고
+이렇게 했을 때 결과가 array(2) 이런형태로 나와야해
+array(0)으로 있으면 로그인 파일에서 저장은 되었는데 메인으로 들어오면서 세션 쿠키가 안이어지는 문제라
+
+확인하면되는거
+
+1. 로그인 성공 직후 var_dump($_SESSION); 찍으면 user_id, user_type이 보이는지
+2. main.php 제일 위에서 var_dump($_SESSION); 찍으면 값이 남아 있는지, 빈 배열인지
