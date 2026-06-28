@@ -1,9 +1,8 @@
 <?php
-include 'db.php';
 // [Session Fixation 취약점 포인트] 
 // 로그인 성공 후 session_regenerate_id()를 호출하지 않고 공격자가 심어둔 기존 세션을 그대로 유지합니다.
 session_start(); 
-
+include 'db.php';
 // ★ 모의해킹 주 담당자의 실습(SQL Injection 로그인 우회)을 위해 
 // 의도적으로 mysqli_real_escape_string 및 어떠한 필터링 함수도 사용하지 않고 날것 그대로 받습니다.
 $user_id = $_POST['user_id'] ?? '';
